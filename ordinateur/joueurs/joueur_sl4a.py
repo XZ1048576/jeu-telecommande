@@ -9,7 +9,7 @@ class _Broadcast(Thread):
     def run(self):
         self._cont=1
         while self._cont:
-            socket.socket(2,2).sendto(msg,("192.168.1.255",20183))
+            socket.socket(2,2).sendto(self.msg,("192.168.1.255",20183))
             time.sleep(5)
     def stop(self):
         self._cont=0
@@ -18,10 +18,13 @@ class joueur:
         a=_Broadcast(b"TELECOMMANDE SL4A "+str(port).encode())
         a.start()
         cnx_p=socket.socket()
-        cnx_p.bind("",port)
+        cnx_p.bind(("",port))
         cnx_p.listen(1)
         self.cnx,infos_cnx=cnx_p.accept()
         a.stop()
     def ask(self,titre,choix):
-        self.cnx.send(b"\x81".join([titre.encode()]+[x.encode() for x in choix])
+        self.cnx.send(b"\x81".join([titre.encode()]+[x.encode() for x in choix]))
         return self.cnx.recv(1024)[0]
+    def __del__(self):
+        self.cnx.send("\x82")
+        self.cnx.close()
